@@ -986,8 +986,8 @@ int main(void)
 
 0000056c <mirf_init>:
 	spi_send_char(W_TX_PAYLOAD); // Write cmd to write payload
-	spi_send_bytes(value, len);      // Write payload
-	mirf_CSN_hi;                     // Pull up chip select
+	spi_send_bytes(value, len);  // Write payload
+	mirf_CSN_hi;                 // Pull up chip select
 
 	mirf_CE_hi; // Start transmission
 }

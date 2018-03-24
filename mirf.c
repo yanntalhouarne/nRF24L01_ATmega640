@@ -20,7 +20,7 @@ void mirf_init()
 	// Define CSN and CE as Output and set them to default
 	DDRD |= (1 << CE); // PD4
 	DDRB |= (1 << SS); // PB0
-	
+
 	mirf_CE_lo;
 	mirf_CSN_hi;
 
@@ -42,7 +42,7 @@ void mirf_config()
 	_delay_us(100);
 	// Set length of incoming payload
 	mirf_config_register(RX_PW_P0, mirf_PAYLOAD);
-	
+
 	// Start receiver
 	PTX = 0;    // Start in receiving mode
 	RX_POWERUP; // Power up in receiving mode
@@ -68,10 +68,10 @@ extern char mirf_data_ready()
 {
 	//println_0("in mirf_data_ready();");
 	if (PTX)
-		return 0;
+	return 0;
 	uint8_t status;
 	// Read MiRF status
-	mirf_CSN_lo;       // Pull down chip select
+	mirf_CSN_lo;                     // Pull down chip select
 	status = spi_exchange_char(NOP); // Read status register
 	mirf_CSN_hi;                     // Pull up chip select
 	return status & (1 << RX_DR);
@@ -81,7 +81,7 @@ extern void mirf_get_data(char *data)
 // Reads mirf_PAYLOAD bytes into data array
 {
 	mirf_CSN_lo;                                  // Pull down chip select
-	spi_send_char(R_RX_PAYLOAD);              // Send cmd to read rx payload
+	spi_send_char(R_RX_PAYLOAD);                  // Send cmd to read rx payload
 	spi_exchange_bytes(data, data, mirf_PAYLOAD); // Read payload
 	mirf_CSN_hi;                                  // Pull up chip select
 	mirf_config_register(STATUS, (1 << RX_DR));   // Reset status register
@@ -94,10 +94,10 @@ void mirf_config_register(char reg, char value)
 	spi_send_char(W_REGISTER | (REGISTER_MASK & reg));
 	//mirf_CSN_hi;
 	//_delay_us(50);
-	
+
 	//mirf_CSN_lo;
 	spi_send_char(value);
-	mirf_CSN_hi;	
+	mirf_CSN_hi;
 }
 
 void mirf_read_register(char reg, char *value, char len)
@@ -126,25 +126,25 @@ void mirf_send(char *value, char len)
 
 	while (PTX)
 	{
-				
+
 	} // Wait until last packet is send
 
 	mirf_CE_lo;
 
-	PTX = 1;    // Set to transmitter mode
+	PTX = 1; // Set to transmitter mode
 	//print("in mirf_send, PTX set to ;");
 	//println_int(PTX);
 	//print_char_0(NL);
 	TX_POWERUP; // Power up
 
-	mirf_CSN_lo;                 // Pull down chip select
+	mirf_CSN_lo;             // Pull down chip select
 	spi_send_char(FLUSH_TX); // Write cmd to flush tx fifo
-	mirf_CSN_hi;                 // Pull up chip select
-	
-	mirf_CSN_lo;                     // Pull down chip select
+	mirf_CSN_hi;             // Pull up chip select
+
+	mirf_CSN_lo;                 // Pull down chip select
 	spi_send_char(W_TX_PAYLOAD); // Write cmd to write payload
-	spi_send_bytes(value, len);      // Write payload
-	mirf_CSN_hi;                     // Pull up chip select
+	spi_send_bytes(value, len);  // Write payload
+	mirf_CSN_hi;                 // Pull up chip select
 
 	mirf_CE_hi; // Start transmission
 }
