@@ -161,6 +161,12 @@ ISR(INT0_vect) // Interrupt handler
 		status = spi_exchange_char(NOP); // Read status register
 		mirf_CSN_hi;                     // Pull up chip select
 
+		lcd_set_cursor(2,1);
+		lcd_print("STAT: ");
+		lcd_set_cursor(2,7);
+		lcd_print_int(status);
+		_delay_ms(1000);
+		
 		mirf_CE_lo; // Deactivate transreceiver
 		RX_POWERUP; // Power up in receiving mode
 		mirf_CE_hi; // Listening for pakets

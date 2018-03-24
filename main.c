@@ -85,6 +85,8 @@ int main(void)
 		lcd_print_int(buffer[1]);
 		_delay_ms(3);
 		
+		while(1);
+		
 		_delay_ms(LOOP_DELAY);
     }
 }
