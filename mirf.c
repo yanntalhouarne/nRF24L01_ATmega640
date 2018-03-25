@@ -77,6 +77,17 @@ extern char mirf_data_ready()
 	return status & (1 << RX_DR);
 }
 
+extern char mirf_data_sent()
+// Checks if data is available for reading
+{
+	int8_t status;
+	// Read MiRF status
+	mirf_CSN_lo;       // Pull down chip select
+	status = spi_exchange_char(NOP); // Read status register
+	mirf_CSN_hi;                     // Pull up chip select
+	//println_0("checking TX;");
+	return status & (1 << TX_DS);
+}
 extern void mirf_get_data(char *data)
 // Reads mirf_PAYLOAD bytes into data array
 {
@@ -160,12 +171,13 @@ ISR(INT0_vect) // Interrupt handler
 		mirf_CSN_lo;                     // Pull down chip select
 		status = spi_exchange_char(NOP); // Read status register
 		mirf_CSN_hi;                     // Pull up chip select
-
+		/*
 		lcd_set_cursor(2,1);
 		lcd_print("STAT: ");
 		lcd_set_cursor(2,7);
 		lcd_print_int(status);
 		_delay_ms(1000);
+		*/
 		
 		mirf_CE_lo; // Deactivate transreceiver
 		RX_POWERUP; // Power up in receiving mode
@@ -173,6 +185,6 @@ ISR(INT0_vect) // Interrupt handler
 		PTX = 0;    // Set to receiving mode
 
 		// Reset status register for further interaction
-		mirf_config_register(STATUS, (1 << TX_DS) | (1 << MAX_RT)); // Reset status register
+		//mirf_config_register(STATUS, (1 << TX_DS) | (1 << MAX_RT)); // Reset status register
 	}
 }

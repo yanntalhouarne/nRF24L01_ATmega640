@@ -4,7 +4,7 @@ void spi_master_initialize()
 {
 	DDR_SPI |= (1 << MOSI) | (1 << SCK) | (1 << SS) ;  // MOSI_0 is output
 	
-	SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0) | (0 << CPHA); // Enable SPI, Master, set clock rate fck/16, SPI_MODE1, MSB first
+	SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0); // Enable SPI, Master, set clock rate fck/16, SPI_MODE0, MSB first
 }
 void spi_slave_initialize()
 {

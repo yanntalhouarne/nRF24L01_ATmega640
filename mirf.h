@@ -29,6 +29,7 @@ extern void mirf_send(char *value, char len);
 extern void mirf_set_RADDR(char *adr);
 extern void mirf_set_TADDR(char *adr);
 extern char mirf_data_ready();
+extern char mirf_data_sent();
 extern void mirf_get_data(char *data);
 
 // Public extended functions
