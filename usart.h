@@ -14,6 +14,7 @@
 #define BR_9600 103
 #define BR_38400 25
 #define BR_76800 12
+#define BR_500000 1
 
 // globals for RX interrupts string
 unsigned char rcv_string[MAX_STRING_SIZE];

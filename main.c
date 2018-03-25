@@ -31,7 +31,7 @@ int main(void)
 	lcd_set_cursor(1,1);
 	lcd_print("Initializing...");
 	_delay_ms(3);
-	setup_usart0(BR_9600); // for FTDI debugging (terminal)
+	setup_usart0(BR_500000); // for FTDI debugging (terminal)
 	mirf_init();
 	_delay_ms(2000);	
 	lcd_send_cmd(CLEAR_DISPLAY);
@@ -43,27 +43,35 @@ int main(void)
 	mirf_config();
 	
 	_delay_ms(10);
+	
 
     while (1) 
     {
 		// to UART
 		//println_0("Waiting for data...;");
 		// to LCD
-		lcd_send_cmd(CLEAR_DISPLAY);
-		_delay_ms(3);
-		lcd_set_cursor(1,1);
-		lcd_print("Waiting for data");
-		_delay_ms(3);
-		
+		//lcd_send_cmd(CLEAR_DISPLAY);
+		//_delay_ms(3);
+		//lcd_set_cursor(1,1);
+		//lcd_print("Waiting for data");
+		//_delay_ms(3);
+		TOGGLE_LED1;
+		//lcd_send_cmd(CLEAR_DISPLAY);
+		//lcd_set_cursor(1,1);
+		//lcd_print("waiting on RX");
 		// wait for data
-		while(!mirf_data_ready())
-		{
-			TOGGLE_LED1; // flash LED while waiting for data
-			_delay_ms(100);
-		}
-		LED1_ON; // turn on LED when data is received
+		while(!mirf_data_ready());
+		//lcd_send_cmd(CLEAR_DISPLAY);
+		//mirf_config_register(STATUS, (1 << RX_DR) | (1 << MAX_RT)); // Reset status register
+		//LED1_ON; // turn on LED when data is received
 		
 		mirf_get_data(buffer);
+		
+		println_int_0(buffer[0]);
+		//lcd_send_cmd(CLEAR_DISPLAY);
+		//lcd_set_cursor(1,1);
+		//lcd_print_int(buffer[0]);
+		
 		
 		/*
 		// send to UART
@@ -76,42 +84,46 @@ int main(void)
 		*/
 		
 		// send to LCD
-		lcd_send_cmd(CLEAR_DISPLAY);
-		_delay_ms(3);
-		lcd_set_cursor(1,1);
-		lcd_print("Data received:");
-		_delay_ms(3);
-		lcd_set_cursor(2,1);
-		lcd_print_int(buffer[0]);
-		_delay_ms(3);
-		lcd_print(", ");
-		_delay_ms(3);
-		lcd_print_int(buffer[1]);
-		_delay_ms(3);
+		//lcd_send_cmd(CLEAR_DISPLAY);
+		//_delay_ms(3);
+		//lcd_set_cursor(1,1);
+		//lcd_print("Data received:");
+		//_delay_ms(3);
+		//lcd_set_cursor(2,1);
+		//lcd_print_int(buffer[0]);
+		//_delay_ms(3);
+		//lcd_print(", ");
+		//_delay_ms(3);
+		//lcd_print_int(buffer[1]);
+		//_delay_ms(3);
 		
-		_delay_ms(5000);
+	//	_delay_ms(5000);
 		
-		buffer[0] = 3;
-		buffer[1] = 4;
+		buffer[0] = 'K';
 		
-		lcd_send_cmd(CLEAR_DISPLAY);
-		_delay_ms(3);
-		lcd_set_cursor(1,1);
-		_delay_ms(3);
-		lcd_print("Sending data...");
+		//lcd_send_cmd(CLEAR_DISPLAY);
+		//_delay_ms(3);
+		//lcd_set_cursor(1,1);
+		//_delay_ms(3);
+		//lcd_print("Sending data...");
+		//_delay_us(10);
 		_delay_us(10);
+		//lcd_send_cmd(CLEAR_DISPLAY);
+		///lcd_set_cursor(1,1);
+		//lcd_print("waiting on TX");
 		mirf_send(buffer, mirf_PAYLOAD);
-		_delay_us(10);
 		while (!mirf_data_sent());
+		//lcd_send_cmd(CLEAR_DISPLAY);
 		mirf_config_register(STATUS, (1 << TX_DS) | (1 << MAX_RT)); // Reset status register
-		lcd_set_cursor(2,1);
-		_delay_ms(3);
-		lcd_print("Data sent.");
-		_delay_us(10);
+		//TOGGLE_LED1;
+		//lcd_set_cursor(2,1);
+		//_delay_ms(3);
+		//lcd_print("Data sent.");
 		
-		while(1);
+		//_delay_ms(500);
 		
-		_delay_ms(LOOP_DELAY);
+		//while(1);
+		
+		//_delay_ms(LOOP_DELAY);
     }
 }
-

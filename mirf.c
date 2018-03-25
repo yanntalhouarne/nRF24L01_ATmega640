@@ -133,7 +133,7 @@ void mirf_send(char *value, char len)
 // Sends a data package to the default address. Be sure to send the correct
 // amount of bytes as configured as payload on the receiver.
 {
-	println_0("In mirf_send();");
+	//println_0("In mirf_send();");
 
 	while (PTX)
 	{
@@ -166,24 +166,15 @@ ISR(INT0_vect) // Interrupt handler
 	// If still in transmitting mode then finish transmission
 	if (PTX)
 	{
-
 		// Read MiRF status
 		mirf_CSN_lo;                     // Pull down chip select
 		status = spi_exchange_char(NOP); // Read status register
 		mirf_CSN_hi;                     // Pull up chip select
-		/*
-		lcd_set_cursor(2,1);
-		lcd_print("STAT: ");
-		lcd_set_cursor(2,7);
-		lcd_print_int(status);
-		_delay_ms(1000);
-		*/
-		
-		mirf_CE_lo; // Deactivate transreceiver
-		RX_POWERUP; // Power up in receiving mode
-		mirf_CE_hi; // Listening for pakets
-		PTX = 0;    // Set to receiving mode
-
+		_delay_us(25);
+		mirf_CE_lo;                             // Deactivate transreceiver
+		RX_POWERUP;                             // Power up in receiving mode
+		mirf_CE_hi;                             // Listening for pakets
+		PTX = 0;                                // Set to receiving mode
 		// Reset status register for further interaction
 		//mirf_config_register(STATUS, (1 << TX_DS) | (1 << MAX_RT)); // Reset status register
 	}
