@@ -91,8 +91,8 @@ int main(void)
 		
 		_delay_ms(5000);
 		
-		buffer[0] = '4';
-		buffer[1] = '5';
+		buffer[0] = 3;
+		buffer[1] = 4;
 		
 		lcd_send_cmd(CLEAR_DISPLAY);
 		_delay_ms(3);

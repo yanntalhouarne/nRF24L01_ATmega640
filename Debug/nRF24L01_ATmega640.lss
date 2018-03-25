@@ -951,11 +951,11 @@ int main(void)
 		
 		_delay_ms(5000);
 		
-		buffer[0] = '4';
- 53c:	84 e3       	ldi	r24, 0x34	; 52
+		buffer[0] = 3;
+ 53c:	83 e0       	ldi	r24, 0x03	; 3
  53e:	88 83       	st	Y, r24
-		buffer[1] = '5';
- 540:	85 e3       	ldi	r24, 0x35	; 53
+		buffer[1] = 4;
+ 540:	84 e0       	ldi	r24, 0x04	; 4
  542:	89 83       	std	Y+1, r24	; 0x01
 		
 		lcd_send_cmd(CLEAR_DISPLAY);
