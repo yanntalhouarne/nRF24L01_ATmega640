@@ -22,6 +22,8 @@
 char buffer[mirf_PAYLOAD] = {1,2};
 
 uint8_t status = 0;
+int8_t tx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
+int8_t rx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
 
 int main(void)
 {
@@ -40,7 +42,15 @@ int main(void)
 	
 	sei(); // enable global interrupts
 	
+	//mirf_config_register(EN_AA, (1<<0));
+	//	mirf_config_register(EN_AA, (1<<1));
+	
 	mirf_config();
+	
+	 /* Set the device addresses */
+	mirf_set_TADDR(tx_address);
+	mirf_set_RADDR(rx_address);
+	
 	
 	_delay_ms(10);
 	
@@ -99,7 +109,7 @@ int main(void)
 		
 	//	_delay_ms(5000);
 		
-		buffer[0] = 'K';
+		//buffer[0] = 'K';
 		
 		//lcd_send_cmd(CLEAR_DISPLAY);
 		//_delay_ms(3);
@@ -107,14 +117,14 @@ int main(void)
 		//_delay_ms(3);
 		//lcd_print("Sending data...");
 		//_delay_us(10);
-		_delay_us(10);
+		//_delay_us(10);
 		//lcd_send_cmd(CLEAR_DISPLAY);
 		///lcd_set_cursor(1,1);
 		//lcd_print("waiting on TX");
-		mirf_send(buffer, mirf_PAYLOAD);
-		while (!mirf_data_sent());
+		//mirf_send(buffer, mirf_PAYLOAD);
+		//while (!mirf_data_sent());
 		//lcd_send_cmd(CLEAR_DISPLAY);
-		mirf_config_register(STATUS, (1 << TX_DS) | (1 << MAX_RT)); // Reset status register
+		//mirf_config_register(STATUS, (1 << TX_DS) | (1 << MAX_RT)); // Reset status register
 		//TOGGLE_LED1;
 		//lcd_set_cursor(2,1);
 		//_delay_ms(3);
