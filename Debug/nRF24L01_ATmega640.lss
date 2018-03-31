@@ -15,11 +15,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
   5 .debug_aranges 00000228  00000000  00000000  000008a4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00002b48  00000000  00000000  00000acc  2**0
+  6 .debug_info   00002b49  00000000  00000000  00000acc  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 00001444  00000000  00000000  00003614  2**0
+  7 .debug_abbrev 00001444  00000000  00000000  00003615  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00001517  00000000  00000000  00004a58  2**0
+  8 .debug_line   00001517  00000000  00000000  00004a59  2**0
                   CONTENTS, READONLY, DEBUGGING
   9 .debug_frame  0000058c  00000000  00000000  00005f70  2**2
                   CONTENTS, READONLY, DEBUGGING
@@ -829,7 +829,7 @@ int main(void)
  480:	08 95       	ret
 
 00000482 <mirf_config>:
- 482:	62 e0       	ldi	r22, 0x02	; 2
+ 482:	6c e6       	ldi	r22, 0x6C	; 108
  484:	85 e0       	ldi	r24, 0x05	; 5
  486:	0e 94 34 02 	call	0x468	; 0x468 <mirf_config_register>
  48a:	60 e0       	ldi	r22, 0x00	; 0

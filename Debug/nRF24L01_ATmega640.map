@@ -802,16 +802,16 @@ END GROUP
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000     0x2b48
+.debug_info     0x00000000     0x2b49
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0xba9 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.132/gcc/dev/atmega640/avr5/crtatmega640.o
  .debug_info    0x00000ba9      0x398 controller_board.o
  .debug_info    0x00000f41      0x53f lcd.o
  .debug_info    0x00001480      0x404 main.o
- .debug_info    0x00001884      0x622 mirf.o
- .debug_info    0x00001ea6      0x915 print.o
- .debug_info    0x000027bb      0x200 spi.o
- .debug_info    0x000029bb      0x18d usart.o
+ .debug_info    0x00001884      0x623 mirf.o
+ .debug_info    0x00001ea7      0x915 print.o
+ .debug_info    0x000027bc      0x200 spi.o
+ .debug_info    0x000029bc      0x18d usart.o
 
 .debug_abbrev   0x00000000     0x1444
  *(.debug_abbrev)
