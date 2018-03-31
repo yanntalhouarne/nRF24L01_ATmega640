@@ -94,7 +94,7 @@ extern char mirf_data_ready()
 	mirf_CSN_lo;                     // Pull down chip select
 	status = spi_exchange_char(NOP); // Read status register
 	mirf_CSN_hi;                     // Pull up chip select
-	println_int_0(status);
+	//println_int_0(status);
 	return status & (1 << RX_DR);
 }
 
