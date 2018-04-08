@@ -5,7 +5,7 @@
  * Author : Yann
  */ 
 #define F_CPU 16000000
-#define LOOP_DELAY 100
+#define LOOP_DELAY 30
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -19,11 +19,11 @@
 
 #define BUFFER_SIZE 2
 
-char buffer[mirf_PAYLOAD] = {1,2};
+char buffer[mirf_PAYLOAD] = {0,0};
 
 uint8_t status = 0;
-int8_t tx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
-int8_t rx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
+int8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
+int8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
 
 int main(void)
 {
@@ -54,6 +54,7 @@ int main(void)
 	
 	_delay_ms(10);
 	
+	print_0("System initialized...;");
 
     while (1) 
     {
@@ -70,14 +71,19 @@ int main(void)
 		//lcd_set_cursor(1,1);
 		//lcd_print("waiting on RX");
 		// wait for data
-		while(!mirf_data_ready());
+		//while(!mirf_data_ready());
+		mirf_send(buffer, mirf_PAYLOAD);
+		_delay_us(10);
+		while (!mirf_data_sent());
+		TOGGLE_LED1
+		//mirf_config_register(STATUS, (1 << TX_DS) | (1 << MAX_RT)); // Reset status register
 		//lcd_send_cmd(CLEAR_DISPLAY);
 		//mirf_config_register(STATUS, (1 << RX_DR) | (1 << MAX_RT)); // Reset status register
 		//LED1_ON; // turn on LED when data is received
 		
-		mirf_get_data(buffer);
+		//mirf_get_data(buffer);
 		
-		println_int_0(buffer[0]);
+		//println_int_0(buffer[0]);
 		//lcd_send_cmd(CLEAR_DISPLAY);
 		//lcd_set_cursor(1,1);
 		//lcd_print_int(buffer[0]);
@@ -134,6 +140,6 @@ int main(void)
 		
 		//while(1);
 		
-		//_delay_ms(LOOP_DELAY);
+		_delay_ms(LOOP_DELAY);
     }
 }
