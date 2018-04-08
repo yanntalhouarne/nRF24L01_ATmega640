@@ -9,9 +9,9 @@
 #include <util/delay.h>
 
 // Mirf settings
-#define mirf_CH 2
-#define mirf_PAYLOAD 16
-#define mirf_CONFIG ((1 << MASK_RX_DR) | (1 << EN_CRC) | (0 << CRCO))
+#define mirf_CH 108
+#define mirf_PAYLOAD 2
+#define mirf_CONFIG ((1 << MASK_RX_DR) | (1 << MAX_RT) | (1 << EN_CRC) | (0 << CRCO))
 
 // Pin definitions for chip select and chip enabled of the MiRF module
 #define CE 4
@@ -26,8 +26,8 @@
 extern void mirf_init();
 extern void mirf_config();
 extern void mirf_send(char *value, char len);
-extern void mirf_set_RADDR(char *adr);
-extern void mirf_set_TADDR(char *adr);
+extern void mirf_set_RADDR(int8_t *adr);
+extern void mirf_set_TADDR(int8_t *adr);
 extern char mirf_data_ready();
 extern char mirf_data_sent();
 extern void mirf_get_data(char *data);
