@@ -102,6 +102,11 @@ void println_int_0(int number)
 	int temp = number;
 	int num_digit = 0;
 	
+	if (number  == 0)
+	{
+		print_char_0('0');
+	}
+	
 	while (temp != 0)
 	{
 		temp = temp /10;

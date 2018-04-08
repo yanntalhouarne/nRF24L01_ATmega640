@@ -13,6 +13,7 @@
 #include "controller_board.h"
 #include "print.h"
 #include "usart.h"
+#include "adc.h"
 #include "spi.h"
 #include "mirf.h"
 #include "lcd.h"
@@ -20,6 +21,7 @@
 #define BUFFER_SIZE 2
 
 char buffer[mirf_PAYLOAD] = {0,0};
+int mtr_cmd = 0;
 
 uint8_t status = 0;
 int8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
@@ -29,6 +31,7 @@ int main(void)
 {
 	setup_ports();
 	setup_lcd();
+	setup_adc();
 	_delay_ms(10);
 	lcd_set_cursor(1,1);
 	lcd_print("Initializing...");
@@ -66,12 +69,15 @@ int main(void)
 		//lcd_set_cursor(1,1);
 		//lcd_print("Waiting for data");
 		//_delay_ms(3);
+		
+		mtr_cmd = analog_get_average(POT1, 5);
+		mtr_cmd /= ADC_SCALING;
+		
+		buffer[0] = mtr_cmd;
+		
+		//println_int_0(mtr_cmd);
+		
 		TOGGLE_LED1;
-		//lcd_send_cmd(CLEAR_DISPLAY);
-		//lcd_set_cursor(1,1);
-		//lcd_print("waiting on RX");
-		// wait for data
-		//while(!mirf_data_ready());
 		mirf_send(buffer, mirf_PAYLOAD);
 		_delay_us(10);
 		while (!mirf_data_sent());
