@@ -22,6 +22,7 @@
 
 char buffer[mirf_PAYLOAD] = {0,0};
 int mtr_cmd = 0;
+int srv_cmd = 0;
 
 uint8_t status = 0;
 int8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
@@ -72,8 +73,14 @@ int main(void)
 		
 		mtr_cmd = analog_get_average(POT1, 5);
 		mtr_cmd /= ADC_SCALING;
-		
 		buffer[0] = mtr_cmd;
+		srv_cmd = analog_get_average(POT2, 5);
+		srv_cmd /= ADC_SCALING;
+		if (srv_cmd < 5)
+			srv_cmd = 0;
+		else if (srv_cmd > 45)
+			srv_cmd = 45;
+		buffer[1] = srv_cmd;
 		
 		//println_int_0(mtr_cmd);
 		

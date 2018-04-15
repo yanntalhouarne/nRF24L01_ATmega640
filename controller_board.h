@@ -42,11 +42,10 @@
  #define TOGGLE_LED6 PORTL ^= (1<<LED6);
 
 // pots
-#define LIFT_SPEED_POT 6 // ADC6
 #define POT1 6 // ADC6
 #define LIFT_ACC_POT 7 // ADC7
-#define SWING_SPEED_POT 4 // ADC4
-#define SWING_ACC_POT 5 // ADC5
+#define POT2 4 // ADC4
+#define POT3 5 // ADC5
 
 // encoders
 #define ENC_1_A 0 // PD0
