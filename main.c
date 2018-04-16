@@ -32,7 +32,6 @@ int8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
 int8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
 	
 uint8_t status = 0;
-uint8_t comm_lost = 0;
 
 int main(void)
 {
@@ -71,37 +70,27 @@ int main(void)
 	
 	lcd_set_cursor(2,1);
 	lcd_print("srv: ");
-	lcd_print_int(mtr_cmd);
 	
-	lcd_set_cursor(1,9);
+	lcd_set_cursor(1,11);
 	lcd_print("RF: ");
-	lcd_print_int(mtr_cmd);
 
     while (1) 
     {
 		
 		TOGGLE_LED1;
 		lcd_set_cursor(1,5);
+		if (mtr_cmd > 99)
+		lcd_print_int(99);
+		else
 		lcd_print_int(mtr_cmd);
 		lcd_print(" ");
 		lcd_set_cursor(2,5);
 		lcd_print_int(srv_cmd);
 		lcd_print(" ");
-		if (comm_lost_count == 0)
-		{
-			lcd_set_cursor(1,13);
-			lcd_print("GOOD");
-		}
-		else if (((comm_lost_count > 6) && (comm_lost_count < 15)))
-		{
-			lcd_set_cursor(1,13);
-			lcd_print("BAD  ");
-		}
-		else if (comm_lost_count > 15)
-		{
-			lcd_set_cursor(1,13);
-			lcd_print("LOST");
-		}
+		lcd_set_cursor(1,15);
+		lcd_print_int(comm_lost_count);
+		lcd_print(" ");
+		
 		mtr_cmd = analog_get_average(POT1, 5);
 		mtr_cmd /= ADC_SCALING;
 		buffer[0] = mtr_cmd;
@@ -123,18 +112,10 @@ int main(void)
 			if (TCNT1 > 62499) // timeout of one second
 			{
 				comm_lost_count++;
-				comm_lost = 1;
 				TOGGLE_LED6;
 				break;
 			}
 		}
-		if (!comm_lost) // a successful transaction decrements comm_lost_count while a time-out increments it
-		{
-			comm_lost_count--; // decrement comm_lost_count
-			if (comm_lost_count < 0) // prevent comm_lost_count from being negative
-				comm_lost_count = 0;
-		}
-		comm_lost = 0;
 		
 		_delay_ms(LOOP_DELAY);
     }
