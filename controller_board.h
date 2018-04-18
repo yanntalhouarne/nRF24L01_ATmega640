@@ -55,6 +55,12 @@
 #define ENC_1_SWITCH 4 // PE4
 #define ENC_2_SWITCH 5 // PE5
 
+// joysticks
+#define JOYSTICK1_X  1
+#define JOYSTICK1_Y  0
+#define JOYSTICK2_X 2
+#define JOYSTICK2_Y 3
+
 // current sense
 #define CURRENT_SENSE_PIN 0  // ADC8 (PK0)
 #define CURRENT_SENSE_CHANNEL 8
