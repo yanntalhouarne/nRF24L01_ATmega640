@@ -99,13 +99,13 @@ int main(void)
 		lcd_print_int(comm_lost_count);
 		lcd_print(" ");
 		
-		mtr_cmd = analog_get_average(JOYSTICK1_Y, 5);
+		mtr_cmd = analog_get_average(JOYSTICK2_Y, 5);
 		mtr_cmd = .75 * mtr_cmd + .25 * old_mtr_cmd;
 		old_mtr_cmd = mtr_cmd;
 		mtr_cmd = js_mtr_scaling(mtr_cmd); 
 		buffer[0] = (mtr_cmd >> 8); // MSB
 		buffer[1] = mtr_cmd; // LSB
-		srv_cmd = analog_get_average(JOYSTICK1_X, 5);
+		srv_cmd = analog_get_average(JOYSTICK2_X, 5);
 		srv_cmd = .75 * srv_cmd + .25 * old_srv_cmd;
 		old_srv_cmd = srv_cmd;
 		srv_cmd = js_srv_scaling(srv_cmd);
