@@ -37,12 +37,16 @@ int mtr_cmd = 0;
 int old_mtr_cmd = 0;
 int old_srv_cmd = 0;
 int srv_cmd = 0;
+uint8_t comm_lost = 0;
+uint8_t temperature = 0;
 
 uint8_t comm_lost_count = 0;
 int8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
 int8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
 	
 uint8_t status = 0;
+
+uint16_t loop_delay_counter = 0;
 
 int main(void)
 {
@@ -55,8 +59,7 @@ int main(void)
 	lcd_print("Initializing...");
 	_delay_ms(3);
 	setup_usart0(BR_500000); // for FTDI debugging (terminal)
-	mirf_init();
-	_delay_ms(2000);	
+	mirf_init();	
 	lcd_send_cmd(CLEAR_DISPLAY);
 	
 	LED_check();
@@ -71,7 +74,7 @@ int main(void)
 	
 	_delay_ms(10);
 	
-	print_0("System initialized...;");
+	println_0("System initialized...;");
 	
 	lcd_send_cmd(CLEAR_DISPLAY);
 	_delay_ms(3);
@@ -84,51 +87,111 @@ int main(void)
 	
 	lcd_set_cursor(1,11);
 	lcd_print("RF: ");
+	
+	lcd_set_cursor(2,12);
+	lcd_print("T: ");
 
     while (1) 
     {
+		if (comm_lost_count > 50)
+		{
+			comm_lost_count = 0;
+			mirf_config();
+		}
+		
+		loop_delay_counter++;
 		
 		TOGGLE_LED1;
 		lcd_set_cursor(1,5);
 		lcd_print_int(mtr_cmd);
-		lcd_print("  ");
+		lcd_print("   ");
 		lcd_set_cursor(2,5);
 		lcd_print_int(srv_cmd);
 		lcd_print("   ");
 		lcd_set_cursor(1,15);
 		lcd_print_int(comm_lost_count);
 		lcd_print(" ");
-		
-		mtr_cmd = analog_get_average(JOYSTICK2_Y, 5);
-		mtr_cmd = .75 * mtr_cmd + .25 * old_mtr_cmd;
-		old_mtr_cmd = mtr_cmd;
-		mtr_cmd = js_mtr_scaling(mtr_cmd); 
-		buffer[0] = (mtr_cmd >> 8); // MSB
-		buffer[1] = mtr_cmd; // LSB
-		srv_cmd = analog_get_average(JOYSTICK2_X, 5);
-		srv_cmd = .75 * srv_cmd + .25 * old_srv_cmd;
-		old_srv_cmd = srv_cmd;
-		srv_cmd = js_srv_scaling(srv_cmd);
-		if ((srv_cmd < 5) && (srv_cmd > -5))
-			srv_cmd = 0;
-		else if (srv_cmd > 45)
-			srv_cmd = 45;
-		else if (srv_cmd < -45)
-			srv_cmd = -45;
-		buffer[2] = srv_cmd;
+		lcd_set_cursor(2,14);
+		lcd_print_int(temperature);
 
-		mirf_send(buffer, mirf_PAYLOAD);
-		_delay_us(10);
-		reset_TMR1();
-		//TOGGLE_LED6;
-		
-		while (!mirf_data_sent())
+	
+		if (loop_delay_counter > 25)
 		{
-			if (TCNT1 > 62499) // timeout of one second
+			loop_delay_counter = 0;
+			buffer[0] = 'T';
+			mirf_send(buffer, mirf_PAYLOAD);
+			reset_TMR1();
+			while (!mirf_data_sent())
 			{
-				comm_lost_count++;
-				TOGGLE_LED6;
-				break;
+				if (TCNT1 > 3000) // timeout of one second
+				{
+					comm_lost = 1;
+					comm_lost_count++;
+					TOGGLE_LED3;
+					break;
+				}
+			}
+			if (!comm_lost)
+			{
+				set_RX_MODE();
+				reset_TMR1();
+				while(!mirf_data_ready())
+				{
+					if (TCNT1 > 3000) // timeout of one second
+					{
+						//comm_lost = 1;
+						comm_lost_count++;
+						TOGGLE_LED6;
+						break;
+					}
+				}
+				if (!comm_lost)
+				{
+					mirf_get_data(buffer); // get the data, put it in buffer
+					temperature = buffer[0];
+					//println_int_0(temperature);
+					
+				}
+				else
+					comm_lost = 0;
+			}
+			else
+			{
+				comm_lost = 0;
+			}
+		}
+		else 
+		{
+			mtr_cmd = analog_get_average(JOYSTICK2_Y, 5);
+			mtr_cmd = .75 * mtr_cmd + .25 * old_mtr_cmd;
+			old_mtr_cmd = mtr_cmd;
+			mtr_cmd = js_mtr_scaling(mtr_cmd); 
+			buffer[0] = (mtr_cmd >> 8); // MSB
+			buffer[1] = mtr_cmd; // LSB
+			
+			srv_cmd = analog_get_average(JOYSTICK2_X, 5);
+			srv_cmd = .75 * srv_cmd + .25 * old_srv_cmd;
+			old_srv_cmd = srv_cmd;
+			srv_cmd = js_srv_scaling(srv_cmd);
+			if ((srv_cmd < 5) && (srv_cmd > -5))
+				srv_cmd = 0;
+			else if (srv_cmd > 45)
+				srv_cmd = 45;
+			else if (srv_cmd < -45)
+				srv_cmd = -45;
+			buffer[2] = srv_cmd;
+
+			mirf_send(buffer, mirf_PAYLOAD);
+			_delay_us(10);
+			reset_TMR1();
+			while (!mirf_data_sent())
+			{
+				if (TCNT1 > 3000) // timeout of one second
+				{
+					comm_lost_count++;
+					TOGGLE_LED3;
+					break;
+				}
 			}
 		}
 		
@@ -136,6 +199,8 @@ int main(void)
     }
 }
 
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& JOYSTICK SCALING &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 int js_mtr_scaling(int value) // scales the result to commands from -1000 to 1000.
 {
 	value = value * CMD_SCALE - OFFSET; // scale to 0 -> 1000
@@ -151,7 +216,6 @@ int js_mtr_scaling(int value) // scales the result to commands from -1000 to 100
 
 	return value;
 } // end of joystick_scaling
-
 int js_srv_scaling(float value) // scales the result to commands from -1000 to 1000.
 {
 	value = value * CMD_SCALE - OFFSET; // scale to 0 -> 1000
@@ -178,12 +242,13 @@ int js_srv_scaling(float value) // scales the result to commands from -1000 to 1
 	return value;
 } // end of joystick_scaling
 
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& TIMER 1 &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 void setup_TMR1()
 {
 	TCCR1B |= (1<<CS12); // 256 prescaler, CTC mode
 
 }
-
 void reset_TMR1()
 {
 	TCNT1 = 0;

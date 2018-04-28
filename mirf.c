@@ -13,6 +13,32 @@
 // Flag which denotes transmitting mode
 volatile char PTX;
 
+void set_RX_MODE()
+{
+	// Start receiver
+	PTX = 0;
+	mirf_config_register(STATUS,(1<<RX_DR)|(1<<TX_DS)|(1<<MAX_RT)); // clear flags
+		
+	mirf_CSN_lo
+	spi_send_char(FLUSH_TX);
+	mirf_CSN_hi
+	RX_POWERUP; // Power up in receiving mode
+	mirf_CE_hi; // Listening for packets
+}
+void set_TX_MODE()
+{
+	// Start receiver
+	PTX = 1;
+	mirf_config_register(STATUS,(1<<RX_DR)|(1<<TX_DS)|(1<<MAX_RT)); // clear flags
+	
+	mirf_CSN_lo
+	spi_send_char(FLUSH_TX);
+	mirf_CSN_hi
+	TX_POWERUP; // Power up in receiving mode
+	mirf_CE_hi; // Listening for packets
+}
+
+
 void mirf_init()
 // Initializes pins ans interrupt to communicate with the MiRF module
 // Should be called in the early initializing phase at startup.
@@ -192,16 +218,21 @@ ISR(INT3_vect) // Interrupt handler
 	// If still in transmitting mode then finish transmission
 	if (PTX)
 	{
-		print_0('H');
+		//print_0('H');
 		// Read MiRF status
 		//mirf_CSN_lo;                     // Pull down chip select
 		//status = spi_exchange_char(NOP); // Read status register
 		//mirf_CSN_hi;                     // Pull up chip select
 		//_delay_us(25);
-		mirf_CE_lo;                             // Deactivate transreceiver
-		RX_POWERUP;                             // Power up in receiving mode
-		mirf_CE_hi;                             // Listening for packets
-		PTX = 0;                                // Set to receiving mode                              // Set to receiving mode
+		
+// 		if (PTX)
+// 		{
+// 			mirf_CE_lo;                             // Deactivate transreceiver
+// 			RX_POWERUP;                             // Power up in receiving mode
+// 			mirf_CE_hi;                             // Listening for packets
+// 			PTX = 0;                                // Set to receiving mode                              // Set to receiving mode
+// 		}
+		
 		// Reset status register for further interaction
 		//mirf_config_register(STATUS, (1 << TX_DS) | (1 << MAX_RT)); // Reset status register
 	}
