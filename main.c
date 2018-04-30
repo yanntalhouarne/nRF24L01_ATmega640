@@ -125,7 +125,7 @@ int main(void)
 
 	
 	
-		if (loop_delay_counter == 100)
+		if (loop_delay_counter == 50)
 		{
 			buffer[0] = 'A';
 			mirf_send(buffer, mirf_PAYLOAD);
@@ -168,14 +168,17 @@ int main(void)
 						GPS_ON = 0;
 				}
 				else
+				{
+					GPS_ON = 0;
 					comm_lost = 0;
+				}
 			}
 			else
 			{
 				comm_lost = 0;
 			}
 		}
-		if (loop_delay_counter > 200)
+		if (loop_delay_counter > 100)
 		{
 			loop_delay_counter = 0;
 			buffer[0] = 'O';
