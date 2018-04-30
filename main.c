@@ -38,8 +38,12 @@ int old_mtr_cmd = 0;
 int old_srv_cmd = 0;
 int srv_cmd = 0;
 uint8_t comm_lost = 0;
-uint8_t temperature = 0;
-
+uint8_t lat_deg = 0;
+uint8_t lat_min = 0;
+uint8_t lat_sec = 0;
+uint8_t lon_deg = 0;
+uint8_t lon_min = 0;
+uint8_t lon_sec = 0;
 uint8_t comm_lost_count = 0;
 int8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
 int8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
@@ -79,18 +83,26 @@ int main(void)
 	lcd_send_cmd(CLEAR_DISPLAY);
 	_delay_ms(3);
 
+// 	lcd_set_cursor(1,1);
+// 	lcd_print("mtr:  ");
+// 	
+// 	lcd_set_cursor(2,1);
+// 	lcd_print("srv: ");
+	
 	lcd_set_cursor(1,1);
-	lcd_print("mtr:  ");
-	
-	lcd_set_cursor(2,1);
-	lcd_print("srv: ");
-	
-	lcd_set_cursor(1,11);
-	lcd_print("RF: ");
-	
-	lcd_set_cursor(2,12);
-	lcd_print("T: ");
+	lcd_print("LAT:");
+	lcd_set_cursor(1,7);
+	lcd_print(",");
+	lcd_set_cursor(1,10);
+	lcd_print(",");
 
+	lcd_set_cursor(2,1);
+	lcd_print("LON:");
+	lcd_set_cursor(2,7);
+	lcd_print(",");
+	lcd_set_cursor(2,10);
+	lcd_print(",");
+	
     while (1) 
     {
 		if (comm_lost_count > 50)
@@ -102,23 +114,28 @@ int main(void)
 		loop_delay_counter++;
 		
 		TOGGLE_LED1;
+
 		lcd_set_cursor(1,5);
-		lcd_print_int(mtr_cmd);
-		lcd_print("   ");
+		lcd_print_int(lat_deg);
+		lcd_set_cursor(1,8);
+		lcd_print_int(lat_min);
+		lcd_set_cursor(1,11);
+		lcd_print_int(lat_sec);
+		
 		lcd_set_cursor(2,5);
-		lcd_print_int(srv_cmd);
-		lcd_print("   ");
+		lcd_print_int(lon_deg);
+		lcd_set_cursor(2,8);
+		lcd_print_int(lon_min);
+		lcd_set_cursor(2,11);
+		lcd_print_int(lon_sec);
+		
 		lcd_set_cursor(1,15);
 		lcd_print_int(comm_lost_count);
 		lcd_print(" ");
-		lcd_set_cursor(2,14);
-		lcd_print_int(temperature);
-
 	
-		if (loop_delay_counter > 25)
+		if (loop_delay_counter == 100)
 		{
-			loop_delay_counter = 0;
-			buffer[0] = 'T';
+			buffer[0] = 'A';
 			mirf_send(buffer, mirf_PAYLOAD);
 			reset_TMR1();
 			while (!mirf_data_sent())
@@ -148,12 +165,60 @@ int main(void)
 				if (!comm_lost)
 				{
 					mirf_get_data(buffer); // get the data, put it in buffer
-					temperature = buffer[0];
-					//println_int_0(temperature);
+					lat_deg = buffer[0];
+					lat_min = buffer[1];
+					lat_sec = buffer[2];
 					
 				}
 				else
 					comm_lost = 0;
+			}
+			else
+			{
+				comm_lost = 0;
+			}
+		}
+		if (loop_delay_counter > 200)
+		{
+			loop_delay_counter = 0;
+			buffer[0] = 'O';
+			mirf_send(buffer, mirf_PAYLOAD);
+			reset_TMR1();
+			while (!mirf_data_sent())
+			{
+				if (TCNT1 > 3000) // timeout of one second
+				{
+					comm_lost = 1;
+					comm_lost_count++;
+					TOGGLE_LED3;
+					break;
+				}
+			}
+			if (!comm_lost)
+			{
+				set_RX_MODE();
+				reset_TMR1();
+				while(!mirf_data_ready())
+				{
+					if (TCNT1 > 3000) // timeout of one second
+					{
+						//comm_lost = 1;
+						comm_lost_count++;
+						TOGGLE_LED6;
+						break;
+					}
+				}
+				if (!comm_lost)
+				{
+					mirf_get_data(buffer); // get the data, put it in buffer
+					lon_deg = buffer[0];
+					lon_min = buffer[1];
+					lon_sec = buffer[2];
+					//println_int_0(temperature);
+					
+				}
+				else
+				comm_lost = 0;
 			}
 			else
 			{
