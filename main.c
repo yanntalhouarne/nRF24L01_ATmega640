@@ -31,6 +31,9 @@ void setup_TMR1();
 void reset_TMR1();
 int js_mtr_scaling(int value);
 int js_srv_scaling(float value);
+void setup_TMR2();
+void setup_TMR3();
+void lcd_print_position();
 
 char buffer[mirf_PAYLOAD] = {0,0,0};
 int mtr_cmd = 0;
@@ -47,15 +50,16 @@ uint8_t lon_sec = 0;
 uint8_t comm_lost_count = 0;
 int8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
 int8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
-	
-uint8_t status = 0;
-
 uint16_t loop_delay_counter = 0;
+uint8_t GPS_ON = 0;
+uint8_t BOAT_ON = 0;
+uint8_t BOAT_OFF = 0;
 
 int main(void)
 {
 	setup_ports();
 	setup_TMR1();
+	setup_TMR3();
 	setup_lcd();
 	setup_adc();
 	_delay_ms(10);
@@ -68,8 +72,6 @@ int main(void)
 	
 	LED_check();
 	
-	sei(); // enable global interrupts
-	
 	mirf_config();
 	
 	 /* Set the device addresses */
@@ -78,31 +80,19 @@ int main(void)
 	
 	_delay_ms(10);
 	
-	println_0("System initialized...;");
+	lcd_send_cmd(CLEAR_DISPLAY);
+	_delay_ms(3);
+	lcd_set_cursor(1,1);
+	lcd_print("Initialization  ");
+	_delay_ms(1000);
+	sei(); // enable global interrupts
 	
 	lcd_send_cmd(CLEAR_DISPLAY);
 	_delay_ms(3);
-
-// 	lcd_set_cursor(1,1);
-// 	lcd_print("mtr:  ");
-// 	
-// 	lcd_set_cursor(2,1);
-// 	lcd_print("srv: ");
 	
 	lcd_set_cursor(1,1);
-	lcd_print("LAT:");
-	lcd_set_cursor(1,7);
-	lcd_print(",");
-	lcd_set_cursor(1,10);
-	lcd_print(",");
+	lcd_print("NO CONNECTION");
 
-	lcd_set_cursor(2,1);
-	lcd_print("LON:");
-	lcd_set_cursor(2,7);
-	lcd_print(",");
-	lcd_set_cursor(2,10);
-	lcd_print(",");
-	
     while (1) 
     {
 		if (comm_lost_count > 50)
@@ -111,27 +101,29 @@ int main(void)
 			mirf_config();
 		}
 		
+		if (GPS_ON && (BOAT_OFF == 0))
+		{
+			lcd_print_position();
+		}
+		
+		if (BOAT_ON && (BOAT_OFF == 0))
+		{
+			if (!GPS_ON)
+			{
+				lcd_set_cursor(1,1);
+				lcd_print("Connected,   ");
+				lcd_set_cursor(2,1);
+				lcd_print("Waiting on GPS  ");	
+			}
+
+		}
+		
 		loop_delay_counter++;
 		
 		TOGGLE_LED1;
 
-		lcd_set_cursor(1,5);
-		lcd_print_int(lat_deg);
-		lcd_set_cursor(1,8);
-		lcd_print_int(lat_min);
-		lcd_set_cursor(1,11);
-		lcd_print_int(lat_sec);
-		
-		lcd_set_cursor(2,5);
-		lcd_print_int(lon_deg);
-		lcd_set_cursor(2,8);
-		lcd_print_int(lon_min);
-		lcd_set_cursor(2,11);
-		lcd_print_int(lon_sec);
-		
-		lcd_set_cursor(1,15);
-		lcd_print_int(comm_lost_count);
-		lcd_print(" ");
+
+	
 	
 		if (loop_delay_counter == 100)
 		{
@@ -156,7 +148,7 @@ int main(void)
 				{
 					if (TCNT1 > 3000) // timeout of one second
 					{
-						//comm_lost = 1;
+						comm_lost = 1;
 						comm_lost_count++;
 						TOGGLE_LED6;
 						break;
@@ -165,10 +157,15 @@ int main(void)
 				if (!comm_lost)
 				{
 					mirf_get_data(buffer); // get the data, put it in buffer
-					lat_deg = buffer[0];
-					lat_min = buffer[1];
-					lat_sec = buffer[2];
-					
+					if(buffer[0] != 0)
+					{
+						GPS_ON = 1;
+						lat_deg = buffer[0];
+						lat_min = buffer[1];
+						lat_sec = buffer[2];
+					}
+					else
+						GPS_ON = 0;
 				}
 				else
 					comm_lost = 0;
@@ -202,7 +199,7 @@ int main(void)
 				{
 					if (TCNT1 > 3000) // timeout of one second
 					{
-						//comm_lost = 1;
+						comm_lost = 1;
 						comm_lost_count++;
 						TOGGLE_LED6;
 						break;
@@ -214,7 +211,6 @@ int main(void)
 					lon_deg = buffer[0];
 					lon_min = buffer[1];
 					lon_sec = buffer[2];
-					//println_int_0(temperature);
 					
 				}
 				else
@@ -253,11 +249,23 @@ int main(void)
 			{
 				if (TCNT1 > 3000) // timeout of one second
 				{
+					comm_lost = 1;
 					comm_lost_count++;
 					TOGGLE_LED3;
 					break;
 				}
 			}
+			if (!comm_lost)
+			{
+				BOAT_ON = 1; // one time flag
+				BOAT_OFF = 0;
+			}
+			else
+			{
+				comm_lost = 0;	
+				BOAT_OFF = 1;			
+			}
+
 		}
 		
 		_delay_ms(LOOP_DELAY);
@@ -300,12 +308,42 @@ int js_srv_scaling(float value) // scales the result to commands from -1000 to 1
 	value = 1000;
 	if (value < -1000)                        // do not send any value smaller than -1000
 	value = -1000;
-	
-
-	
 
 	return value;
 } // end of joystick_scaling
+
+void lcd_print_position()
+{
+	lcd_set_cursor(1,1);
+	lcd_print("LAT:");
+	lcd_set_cursor(1,7);
+	lcd_print(",");
+	lcd_set_cursor(1,10);
+	lcd_print(",");
+
+	lcd_set_cursor(2,1);
+	lcd_print("LON:");
+	lcd_set_cursor(2,7);
+	lcd_print(",");
+	lcd_set_cursor(2,10);
+	lcd_print(",");
+				
+	lcd_set_cursor(1,5);
+	lcd_print_int(lat_deg);
+	lcd_set_cursor(1,8);
+	lcd_print_int(lat_min);
+	lcd_set_cursor(1,11);
+	lcd_print_int(lat_sec);
+	lcd_print(" ");
+				
+	lcd_set_cursor(2,5);
+	lcd_print_int(lon_deg);
+	lcd_set_cursor(2,8);
+	lcd_print_int(lon_min);
+	lcd_set_cursor(2,11);
+	lcd_print_int(lon_sec);
+	lcd_print("     ");
+}
 
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& TIMER 1 &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -314,7 +352,40 @@ void setup_TMR1()
 	TCCR1B |= (1<<CS12); // 256 prescaler, CTC mode
 
 }
+
 void reset_TMR1()
 {
 	TCNT1 = 0;
+}
+
+void setup_TMR3()
+{
+	TCCR3A |= (1<<COM3A1); // set OC2A on compare match
+	TCCR3B |= (1<<WGM32) | (1<<CS32) | (1<<CS30); // 1024 prescaler, CTC mode
+	OCR3A = 31248; 
+	TIMSK3 |= (1<<OCIE3A);
+}
+
+ISR(TIMER3_COMPA_vect)
+{
+	if (BOAT_ON)
+	{
+		lcd_set_cursor(1,14);
+		if( comm_lost_count <= 0)
+		lcd_print("***");
+		else if ( (comm_lost_count>0) && (comm_lost_count<3) )
+		lcd_print("** ");
+		else if ( (comm_lost_count>=3) && (comm_lost_count<6) )
+		lcd_print("*  ");
+		else if ( (comm_lost_count>=6) && (comm_lost_count<10))
+		lcd_print("OFF");
+		else 
+		{
+			lcd_set_cursor(1,1);
+			lcd_print("CONNECTION LOST,");
+			lcd_set_cursor(2,1);
+			lcd_print("RESET CONTROLLER");             
+		}
+		comm_lost_count = 0;
+	}
 }
