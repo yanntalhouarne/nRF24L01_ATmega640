@@ -163,6 +163,7 @@ int main(void)
 						lat_deg = buffer[0];
 						lat_min = buffer[1];
 						lat_sec = buffer[2];
+						lat_sec = (lat_sec / 100 ) * 60; // converts to seconds
 					}
 					else
 						GPS_ON = 0;
@@ -214,6 +215,7 @@ int main(void)
 					lon_deg = buffer[0];
 					lon_min = buffer[1];
 					lon_sec = buffer[2];
+					lon_sec = (lon_sec / 100) * 60;
 					
 				}
 				else
