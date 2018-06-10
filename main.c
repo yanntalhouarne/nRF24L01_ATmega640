@@ -29,17 +29,19 @@
 
 void setup_TMR1();
 void reset_TMR1();
-int js_mtr_scaling(int value);
-int js_srv_scaling(float value);
+int16_t js_mtr_scaling(int16_t value);
+int16_t js_srv_scaling(float value);
+void get_speed(); 
 void setup_TMR2();
 void setup_TMR3();
 void lcd_print_position();
 
-char buffer[mirf_PAYLOAD] = {0,0,0};
-int mtr_cmd = 0;
-int old_mtr_cmd = 0;
-int old_srv_cmd = 0;
-int srv_cmd = 0;
+int8_t buffer[mirf_PAYLOAD] = {0,0,0};
+int16_t mtr_cmd = 0;
+int16_t old_mtr_cmd = 0;
+int16_t old_srv_cmd = 0;
+int16_t srv_cmd = 0;
+float speed = 0;
 uint8_t comm_lost = 0;
 uint8_t lat_deg = 0;
 uint8_t lat_min = 0;
@@ -122,9 +124,6 @@ int main(void)
 		
 		TOGGLE_LED1;
 
-
-	
-	
 		if (loop_delay_counter == 50)
 		{
 			buffer[0] = 'A';
@@ -228,10 +227,12 @@ int main(void)
 		}
 		else 
 		{
+			get_speed();
 			mtr_cmd = analog_get_average(JOYSTICK2_Y, 5);
 			mtr_cmd = .75 * mtr_cmd + .25 * old_mtr_cmd;
 			old_mtr_cmd = mtr_cmd;
 			mtr_cmd = js_mtr_scaling(mtr_cmd); 
+			mtr_cmd *= speed;
 			buffer[0] = (mtr_cmd >> 8); // MSB
 			buffer[1] = mtr_cmd; // LSB
 			
@@ -279,7 +280,7 @@ int main(void)
 
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& JOYSTICK SCALING &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-int js_mtr_scaling(int value) // scales the result to commands from -1000 to 1000.
+int16_t js_mtr_scaling(int16_t value) // scales the result to commands from -1000 to 1000.
 {
 	value = value * CMD_SCALE - OFFSET; // scale to 0 -> 1000
 
@@ -294,7 +295,7 @@ int js_mtr_scaling(int value) // scales the result to commands from -1000 to 100
 
 	return value;
 } // end of joystick_scaling
-int js_srv_scaling(float value) // scales the result to commands from -1000 to 1000.
+int16_t js_srv_scaling(float value) // scales the result to commands from -1000 to 1000.
 {
 	value = value * CMD_SCALE - OFFSET; // scale to 0 -> 1000
 	if ((value < DEADBAND_MAX) && (value > DEADBAND_MIN)) // if within the dead band, send neutral command (0)
@@ -316,7 +317,11 @@ int js_srv_scaling(float value) // scales the result to commands from -1000 to 1
 
 	return value;
 } // end of joystick_scaling
-
+void get_speed() // reads the speed pot
+{
+	speed = analog_get_average(POT3, 3);
+	speed /= 1100;
+} 
 void lcd_print_position()
 {
 	lcd_set_cursor(1,1);

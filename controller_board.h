@@ -43,7 +43,7 @@
 
 // pots
 #define POT1 6 // ADC6
-#define LIFT_ACC_POT 7 // ADC7
+#define POT4 3 // ADC3
 #define POT2 4 // ADC4
 #define POT3 5 // ADC5
 
