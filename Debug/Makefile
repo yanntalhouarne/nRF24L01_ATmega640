@@ -39,6 +39,7 @@ SUBDIRS :=
 C_SRCS +=  \
 ../adc.c \
 ../controller_board.c \
+../gpio.c \
 ../lcd.c \
 ../main.c \
 ../mirf.c \
@@ -56,6 +57,7 @@ ASM_SRCS +=
 OBJS +=  \
 adc.o \
 controller_board.o \
+gpio.o \
 lcd.o \
 main.o \
 mirf.o \
@@ -66,6 +68,7 @@ usart.o
 OBJS_AS_ARGS +=  \
 adc.o \
 controller_board.o \
+gpio.o \
 lcd.o \
 main.o \
 mirf.o \
@@ -76,6 +79,7 @@ usart.o
 C_DEPS +=  \
 adc.d \
 controller_board.d \
+gpio.d \
 lcd.d \
 main.d \
 mirf.d \
@@ -86,6 +90,7 @@ usart.d
 C_DEPS_AS_ARGS +=  \
 adc.d \
 controller_board.d \
+gpio.d \
 lcd.d \
 main.d \
 mirf.d \
@@ -107,6 +112,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

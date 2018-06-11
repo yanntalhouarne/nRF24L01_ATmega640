@@ -17,6 +17,7 @@
 #include "spi.h"
 #include "mirf.h"
 #include "lcd.h"
+#include "gpio.h"
 
 /* joystick reading and scaling */
 #define CMD_SCALE 1.44
@@ -56,10 +57,15 @@ uint16_t loop_delay_counter = 0;
 uint8_t GPS_ON = 0;
 uint8_t BOAT_ON = 0;
 uint8_t BOAT_OFF = 0;
+uint8_t toggle_gps = 0;
+uint8_t one_time_flag = 0;
+int8_t encoder_count = 0;
 
 int main(void)
 {
 	setup_ports();
+	setup_ext_int(ENC_2_A,      FALLING);
+	setup_ext_int(ENC_2_SWITCH, FALLING);
 	setup_TMR1();
 	setup_TMR3();
 	setup_lcd();
@@ -103,28 +109,110 @@ int main(void)
 			mirf_config();
 		}
 		
-		if (GPS_ON && (BOAT_OFF == 0))
+		if (encoder_count == 0)
 		{
-			lcd_print_position();
-		}
-		
-		if (BOAT_ON && (BOAT_OFF == 0))
-		{
-			if (!GPS_ON)
+			if (BOAT_ON && (BOAT_OFF == 0))
 			{
 				lcd_set_cursor(1,1);
-				lcd_print("Connected,   ");
+				lcd_print("Connected    ");
 				lcd_set_cursor(2,1);
-				lcd_print("Waiting on GPS  ");	
+				lcd_print("SPEED =        ");
 			}
-
+		}
+		
+		// DISPLAY GPS
+		if (encoder_count == 1)
+		{
+			if (!toggle_gps)
+			{
+				lcd_set_cursor(1,1);
+				lcd_print("GPS OFF      ");
+				lcd_set_cursor(2,1);
+				lcd_print("                ");
+			}
+			else
+			{
+				if (GPS_ON && (BOAT_OFF == 0))
+				{
+					lcd_print_position();
+				}
+				
+				if (BOAT_ON && (BOAT_OFF == 0))
+				{
+					if (!GPS_ON)
+					{
+						lcd_set_cursor(1,1);
+						lcd_print("Connected,   ");
+						lcd_set_cursor(2,1);
+						lcd_print("Waiting on GPS  ");
+					}
+				}
+			}
+			
 		}
 		
 		loop_delay_counter++;
 		
 		TOGGLE_LED1;
-
-		if (loop_delay_counter == 50)
+		
+		if ( (toggle_gps == 0) && (one_time_flag == 0))
+		{
+			one_time_flag = 1;
+			buffer[0] = 'N';
+			mirf_send(buffer, mirf_PAYLOAD);
+			_delay_us(10);
+			reset_TMR1();
+			while (!mirf_data_sent())
+			{
+				if (TCNT1 > 3000) // timeout of one second
+				{
+					comm_lost = 1;
+					comm_lost_count++;
+					TOGGLE_LED3;
+					break;
+				}
+			}
+			if (!comm_lost)
+			{
+				BOAT_ON = 1; // one time flag
+				BOAT_OFF = 0;
+			}
+			else
+			{
+				comm_lost = 0;
+				BOAT_OFF = 1;
+			}
+		}
+		if ( (toggle_gps == 1) && (one_time_flag == 0) )
+		{
+			one_time_flag = 1;
+			buffer[0] = 'Y';
+			mirf_send(buffer, mirf_PAYLOAD);
+			_delay_us(10);
+			reset_TMR1();
+			while (!mirf_data_sent())
+			{
+				if (TCNT1 > 3000) // timeout of one second
+				{
+					comm_lost = 1;
+					comm_lost_count++;
+					TOGGLE_LED3;
+					break;
+				}
+			}
+			if (!comm_lost)
+			{
+				BOAT_ON = 1; // one time flag
+				BOAT_OFF = 0;
+			}
+			else
+			{
+				comm_lost = 0;
+				BOAT_OFF = 1;
+			}
+		}
+		
+		if ( (loop_delay_counter == 50) && (toggle_gps) )
 		{
 			buffer[0] = 'A';
 			mirf_send(buffer, mirf_PAYLOAD);
@@ -178,7 +266,8 @@ int main(void)
 				comm_lost = 0;
 			}
 		}
-		if (loop_delay_counter > 100)
+
+		if ( (loop_delay_counter > 100) && (toggle_gps) )
 		{
 			loop_delay_counter = 0;
 			buffer[0] = 'O';
@@ -273,6 +362,7 @@ int main(void)
 			}
 
 		}
+		
 		
 		_delay_ms(LOOP_DELAY);
     }
@@ -394,8 +484,27 @@ ISR(TIMER3_COMPA_vect)
 			lcd_set_cursor(1,1);
 			lcd_print("CONNECTION LOST,");
 			lcd_set_cursor(2,1);
-			lcd_print("RESET CONTROLLER");             
+			lcd_print("RESET DRIVER");             
 		}
 		comm_lost_count = 0;
 	}
 }
+
+ISR(INT1_vect)
+{
+	if (digital_read(PORT_L, ENC_2_B))
+		encoder_count++;
+	else 
+		encoder_count--;
+	if (encoder_count > 1)
+		encoder_count = 0;
+	if (encoder_count < 0)
+		encoder_count = 1;
+}
+
+ISR(INT5_vect)
+{
+	one_time_flag = 0;
+	toggle_gps ^= 1;
+}
+

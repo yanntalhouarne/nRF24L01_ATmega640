@@ -17,6 +17,10 @@ void setup_ports()
 {
 	// LEDs
 	DDRL |= (1<<LED1) | (1<<LED2) | (1<<LED3) | (1<<LED4) | (1<<LED5) | (1<<LED6); // set LEDs as outputs
+	
+	DDRD &= ~(1<<ENC_2_A);
+	DDRL &= ~(1<<ENC_2_B);
+	DDRE &= ~(1<<ENC_1_SWITCH);
 
 }
 
