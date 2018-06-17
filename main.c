@@ -46,10 +46,10 @@ float speed = 0;
 uint8_t comm_lost = 0;
 uint8_t lat_deg = 0;
 uint8_t lat_min = 0;
-uint8_t lat_sec = 0;
+float lat_sec = 0;
 uint8_t lon_deg = 0;
 uint8_t lon_min = 0;
-uint8_t lon_sec = 0;
+float lon_sec = 0;
 uint8_t comm_lost_count = 0;
 int8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
 int8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
@@ -155,7 +155,7 @@ int main(void)
 		
 		TOGGLE_LED1;
 		
-		if ( (toggle_gps == 0) && (one_time_flag == 0))
+		if ( (toggle_gps == 0) && (one_time_flag == 0) && (encoder_count == 1) )
 		{
 			one_time_flag = 1;
 			buffer[0] = 'N';
